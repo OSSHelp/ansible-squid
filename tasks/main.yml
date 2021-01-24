@@ -1,0 +1,59 @@
+---
+- name: install packages
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 86400
+
+- name: create directory {{ templates_dir }}/squid
+  file:
+    path: "{{ templates_dir }}/squid"
+    state: directory
+    owner: "root"
+    group: "root"
+  when: place_cfg_template
+
+- name: place inital-setup helper
+  template:
+    src: initial-setup.j2
+    dest: "{{ templates_dir }}/squid/initial-setup"
+    owner: "root"
+    group: "root"
+    mode: 0750
+  when: place_cfg_template
+
+- name: create squid.service.d directory
+  file:
+    path: /etc/systemd/system/squid.service.d
+    state: directory
+    mode: '0755'
+  when: place_cfg_template
+
+- name: copy systemd unit override
+  template:
+    src: squid-systemd-unit.j2
+    dest: "/etc/systemd/system/squid.service.d/override.conf"
+    owner: root
+    group: root
+  when: place_cfg_template
+  notify:
+    - reload squid unit
+    - restart squid service
+
+- name: enable service
+  service:
+    name: squid
+    enabled: yes
+
+- name: generate squid.conf
+  template:
+    src: squid-conf.j2
+    dest: /etc/squid/squid.conf
+    owner: root
+    group: proxy
+    mode: 0640
+    validate: squid -k parse -f %s
+  notify:
+    - reload squid unit
+    - restart squid service

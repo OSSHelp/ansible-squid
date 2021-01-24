@@ -1,0 +1,7 @@
+[Service]
+{% if ansible_distribution_release == 'bionic' %}
+ExecStartPre=+{{ templates_dir }}/squid/initial-setup
+{% elif ansible_distribution_release == 'xenial' %}
+PermissionsStartOnly=true
+ExecStartPre={{ templates_dir }}/squid/initial-setup
+{% endif %}

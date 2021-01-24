@@ -1,0 +1,82 @@
+#listen
+http_port {{ listen.http_port|default(3128,true) }}
+icp_port {{ listen.icp_port|default(0,true) }}
+
+# logging
+cache_store_log {{ logs.cache_store|default('none',true) }}
+access_log {{ logs.access|default('none',true) }}
+cache_log {{ logs.cache|default('/dev/null',true) }}
+
+# security
+via {{ security.via|default('off',true) }}
+forwarded_for {{ security.forwarded_for|default('delete',true) }}
+
+# acl
+{% if default_acl is defined %}
+{% for acl_item in default_acl %}
+acl {{ acl_item }}
+{% endfor %}
+{% endif %}
+{% if localnet_acl is defined %}
+# acl/trusted
+{% for subnet in localnet_acl %}
+acl localnet src {{ subnet }}
+{% endfor %}
+{% endif %}
+{% if custom_acl is defined %}
+# acl/custom
+{% for acl_item in custom_acl %}
+acl {{ acl_item }}
+{% endfor %}
+{% endif %}
+
+# http/access
+{% if http_access %}
+{% for access_item in http_access %}
+http_access {{ access_item }}
+{% endfor %}
+{% endif %}
+
+#caching
+{% if cache_dir is defined %}
+cache_dir {{ cache_dir["type"] | default('ufs',true) }} {{ cache_dir["path"] | default('/var/spool/squid',true) }} {{ cache_dir["size"] | default('100',true) }} {{ cache_dir["level1_dirs"] | default(16,true) }} {{ cache_dir["level2_dirs"] | default(256,true) }}
+{% else %}
+cache_dir ufs /var/spool/squid 100 16 256
+{% endif %}
+
+minimum_object_size {{ minimum_object_size | default(0,true) }} KB
+maximum_object_size {{ maximum_object_size | default(4069,true) }} KB
+maximum_object_size_in_memory {{ maximum_object_size_in_memory | default(4096,true) }} KB
+cache_mem  {{ cache_mem | default(256,true) }} MB
+memory_cache_mode {{ memory_cache_mode | default('always',true) }}
+
+# refresh pattern for debs and udebs
+refresh_pattern deb$   129600 100% 129600
+refresh_pattern udeb$   129600 100% 129600
+refresh_pattern tar.gz$  129600 100% 129600
+
+# always refresh Packages and Release files
+refresh_pattern \/(Packages|Sources)(|\.bz2|\.gz|\.xz)$ 0 0% 0
+refresh_pattern \/Release(|\.gpg)$ 0 0% 0
+refresh_pattern \/InRelease$ 0 0% 0
+
+# handle meta-release and changelogs.ubuntu.com special
+# (fine to have this on debian too)
+refresh_pattern changelogs.ubuntu.com/*  0  1% 1
+
+#other
+shutdown_lifetime {{ shutdown_timetout | default(5,true) }} seconds
+workers {{ workers | default(1,true) }}
+
+{% if refresh_patterns is defined %}
+{% for pattern in refresh_patterns %}
+refresh_pattern {{ pattern }}
+{% endfor %}
+{% else %}
+refresh_pattern ^ftp:           1440    20%     10080
+refresh_pattern ^gopher:        1440    0%      1440
+refresh_pattern -i (/cgi-bin/|\?) 0     0%      0
+refresh_pattern (Release|Packages(.gz)*)$      0       20%     2880
+refresh_pattern (\.deb|\.udeb)$   129600 100% 129600
+refresh_pattern .               0       20%     4320
+{% endif %}

@@ -1,0 +1,66 @@
+---
+packages:
+  - squid
+  - squid-langpack
+  - squidclient
+  - squid-purge
+
+log_dir: /var/log/squid
+templates_dir: /usr/local/osshelp
+place_cfg_template: false
+
+listen:
+  http_port: 3128
+  icp_port: 0
+
+logs:
+  access: 'none'
+  cache: '/dev/null'
+  cache_store: 'none'
+
+security:
+  forwarded_for: 'delete'
+  via: 'off'
+
+localnet_acl:
+  - '127.0.0.1'
+  - '::1'
+
+default_acl:
+  - SSL_ports port 443
+  - Safe_ports port 80          # http
+  - Safe_ports port 21          # ftp
+  - Safe_ports port 443         # https
+  - Safe_ports port 70          # gopher
+  - Safe_ports port 210         # wais
+  - Safe_ports port 280         # http-mgmt
+  - Safe_ports port 488         # gss-http
+  - Safe_ports port 591         # filemaker
+  - Safe_ports port 777         # multiling http
+  - Safe_ports port 1025-65535  # unregistered ports
+  - CONNECT method CONNECT
+
+http_access:
+  - deny !Safe_ports
+  - deny CONNECT !SSL_ports
+  - allow localhost manager
+  - deny manager
+  - allow localnet
+  - allow localhost
+  - deny all
+
+cache_dir:
+  type: 'ufs'
+  path: '/var/spool/squid'
+  size: 100
+  level1_dirs: 16
+  level2_dirs: 256
+
+minimum_object_size: 0
+maximum_object_size: 4096
+maximum_object_size_in_memory: 4096
+cache_mem: 256
+memory_cache_mode: 'always'
+
+shutdown_timetout: 5
+workers: 1

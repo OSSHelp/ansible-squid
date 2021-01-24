@@ -1,0 +1,21 @@
+#!/bin/bash
+
+cache_dir="{{ cache_dir["path"] | default('/var/spool/squid',true) }}"
+log_dir="{{ log_dir | default('/var/log/squid',true) }}"
+
+test -d "${log_dir}" || {
+  mkdir -p "${log_dir}"
+  chown -R proxy:proxy "${log_dir}"
+}
+
+test -d "${cache_dir}" || {
+  mkdir -p "${cache_dir}"
+  chown -R proxy:proxy "${cache_dir}"
+}
+
+test -r "${cache_dir}/swap.state" || {
+  squid -z
+  chown -R proxy:proxy "${cache_dir}"
+}
+
+exit 0
