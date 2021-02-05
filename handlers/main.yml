@@ -5,6 +5,4 @@
     daemon_reload: yes
 
 - name: restart squid service
-  service:
-    name: squid
-    state: restarted
+  include_tasks: squid-restart.yml
