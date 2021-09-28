@@ -1,4 +1,4 @@
-#listen
+# listen
 http_port {{ listen.http_port|default(3128,true) }}
 icp_port {{ listen.icp_port|default(0,true) }}
 
@@ -10,6 +10,18 @@ cache_log {{ logs.cache|default('/dev/null',true) }}
 # security
 via {{ security.via|default('off',true) }}
 forwarded_for {{ security.forwarded_for|default('delete',true) }}
+{% if visible_hostname is defined %}
+
+# hostname
+visible_hostname {{ visible_hostname }}
+{% endif %}
+
+# auth
+{% if auth_param is defined %}
+{% for auth_item in auth_param %}
+auth_param {{ auth_item }}
+{% endfor %}
+{% endif %}
 
 # acl
 {% if default_acl is defined %}
@@ -79,4 +91,18 @@ refresh_pattern -i (/cgi-bin/|\?) 0     0%      0
 refresh_pattern (Release|Packages(.gz)*)$      0       20%     2880
 refresh_pattern (\.deb|\.udeb)$   129600 100% 129600
 refresh_pattern .               0       20%     4320
+{% endif %}
+
+# request header access
+{% if request_header_access is defined %}
+{% for header_item in request_header_access %}
+request_header_access {{ header_item }}
+{% endfor %}
+{% endif %}
+
+# custom params
+{% if custom_params is defined %}
+{% for custom_item in custom_params %}
+{{ custom_item.key}} {{ custom_item.value }}
+{% endfor %}
 {% endif %}

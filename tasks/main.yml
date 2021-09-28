@@ -1,7 +1,7 @@
 ---
 - name: install packages
   apt:
-    name: "{{ packages }}"
+    name: "{{ squid_packages }}"
     state: present
     update_cache: yes
     cache_valid_time: 86400
@@ -46,6 +46,16 @@
     name: squid
     enabled: yes
 
+- name: generate passwd
+  template:
+    src: passwd.j2
+    dest: /etc/squid/passwd
+    owner: root
+    group: proxy
+    mode: 0640
+  when: squid_users is defined
+  notify: restart squid service
+
 - name: generate squid.conf
   template:
     src: squid-conf.j2
@@ -53,6 +63,4 @@
     owner: root
     group: proxy
     mode: 0640
-  notify:
-    - reload squid unit
-    - restart squid service
+  notify: restart squid service

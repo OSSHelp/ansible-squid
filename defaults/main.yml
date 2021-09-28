@@ -1,5 +1,5 @@
 ---
-packages:
+squid_packages:
   - squid
   - squid-langpack
   - squidclient

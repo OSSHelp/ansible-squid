@@ -1,0 +1,3 @@
+{% for user_item in squid_users %}
+{{ user_item.name }}:{{ user_item.encrypted_password }}
+{% endfor %}
